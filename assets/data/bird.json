@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Rangkong Papua",
+    "scientific_name": "Buceros bicornis",
+    "image_url": "assets/images/rangkong_papua.jpg",
+    "description": "Burung endemik Papua dengan paruh besar dan warna tubuh coklat kehitaman.",
+    "habitat": "Hutan hujan tropis",
+    "conservation_status": "Kurang Mengkhawatirkan"
+  },
+  {
+    "id": 2,
+    "name": "Anis Geomalia",
+    "scientific_name": "Zoothera heinrichi",
+    "image_url": "assets/images/anis_geomalia.jpg",
+    "description": "Burung endemik Sulawesi dengan ekor panjang dan suara khas berirama.",
+    "habitat": "Hutan pegunungan",
+    "conservation_status": "Rentan"
+  },
+  {
+    "id": 3,
+    "name": "Cenderawasih Kecil",
+    "scientific_name": "Paradisaea minor",
+    "image_url": "https://example.com/cenderawasih_kecil.jpg",
+    "description": "Burung eksotis dengan bulu menyerupai kipas dan warna mencolok.",
+    "habitat": "Hutan dataran rendah",
+    "conservation_status": "Nyaris Terancam"
+  },
+  {
+    "id": 4,
+    "name": "Kakatua Jambul Kuning",
+    "scientific_name": "Cacatua sulphurea",
+    "image_url": "https://example.com/kakatua_jambul_kuning.jpg",
+    "description": "Burung cerdas dengan bulu putih dan jambul kuning mencolok.",
+    "habitat": "Hutan mangrove dan hutan pesisir",
+    "conservation_status": "Terancam Punah"
+  }
+]
