@@ -1,44 +1,68 @@
-// lib/services/api_service.dart
+import 'package:dio/dio.dart';
+import '../model/endemik.dart';
+import '../helper/database_helper.dart';
 
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../models/bird_model.dart';
+/*
+  service ini dibentuk karena prosesnya yang akan memblokir memory UI
+  sehingga perlu dipisah untuk tiap proses "mengambil data"
+  yang pastinya membutuhkan waktu lama
+*/
 
-class ApiService {
-  static const String apiKey = "dpjkq9mjfreh"; // Ganti dengan API Key eBird
-  static const String baseUrl = "https://api.ebird.org/v2/ref/taxonomy/ebird?fmt=json";
+class EndemikService {
+  final Dio _dio = Dio();
 
-  Future<List<Bird>> fetchBirds(String regionCode) async {
-    final url = "$baseUrl/data/obs/region/recent/$regionCode";
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'X-eBirdApiToken': apiKey,
-      },
-    );
+  Future<bool> isDataAvailable() async {
+    final dbHelper = DatabaseHelper();
+    final int count = await dbHelper.count();
+    return count > 0;
+  }
 
-    if (response.statusCode == 200) {
-      List<dynamic> jsonList = json.decode(response.body);
-      return jsonList.map((json) => Bird.fromJson(json)).toList();
-    } else {
-      throw Exception("Gagal memuat data");
+  Future<List<Endemik>> getData() async {
+    final dbHelper = DatabaseHelper();
+
+    try {
+      // Cek apakah data sudah ada di database
+      bool dataExists = await isDataAvailable();
+      if (dataExists) {
+        print("Data sudah ada di database, tidak perlu mengambil dari API.");
+        final List<Endemik> oldData = await dbHelper.getAll();
+        return oldData;
+      }
+
+      // jika belum, maka tarik dari API
+      final response = await _dio
+          .get('https://hendroprwk08.github.io/data_endemik/endemik.json');
+      final List<dynamic> data = response.data;
+
+      for (var json in data) {
+        Endemik model = Endemik(
+            id: json["id"],
+            nama: json["nama"],
+            nama_latin: json["nama_latin"],
+            deskripsi: json["deskripsi"],
+            asal: json["asal"],
+            foto: json["foto"],
+            status: json["status"],
+            is_favorit: "false" ); // masuk sebagai string
+
+        await dbHelper.insert(model);
+      }
+
+      return data.map((json) => Endemik.fromJson(json)).toList();
+    } catch (e) {
+      print(e);
+      return [];
     }
   }
 
-  Future<Bird> getBirdDetails(String speciesCode) async {
-    final url = "$baseUrl/species/info/$speciesCode";
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'X-eBirdApiToken': apiKey,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      Map<String, dynamic> jsonData = json.decode(response.body);
-      return Bird.fromJson(jsonData);
-    } else {
-      throw Exception("Gagal memuat data");
+  Future<List<Endemik>> getFavoritData() async {
+    try {
+      final db = await DatabaseHelper();
+      final List<Endemik> data = await db.getFavoritAll();
+      return data;
+    } catch (e) {
+      print(e);
+      return [];
     }
   }
 }

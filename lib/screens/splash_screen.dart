@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     // Inisialisasi animasi
     _animationController = AnimationController(
-      duration: Duration(seconds: 3),
+      duration: Duration(seconds: 4),
       vsync: this,
     );
 
@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _animationController.forward();
 
     // Setelah animasi selesai, pindah ke Home Screen
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(Duration(seconds: 4), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -42,23 +42,38 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   @override
+  void dispose() {
+    _animationController.dispose(); // Jangan lupa dispose
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white, // Background putih
       body: Center(
         child: Opacity(
           opacity: _opacityAnimation.value,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/images/splash_logo.png', height: 150),
+              Image.asset(
+                'assets/images/splash_logo.png', // Pastikan path ini benar
+                height: 200,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Text("Logo tidak ditemukan", style: TextStyle(color: Colors.red));
+                },
+              ),
               SizedBox(height: 20),
               Text(
                 "EndemikDB",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
               ),
               SizedBox(height: 10),
-              CircularProgressIndicator(),
+              CircularProgressIndicator(
+                color: Colors.green,
+              ),
             ],
           ),
         ),

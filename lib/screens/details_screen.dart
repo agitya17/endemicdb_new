@@ -1,7 +1,6 @@
+// screens/details_screen.dart
 import 'package:flutter/material.dart';
 import 'package:endemicdb_new/models/bird_model.dart';
-import 'package:endemicdb_new/providers/favorite_provider.dart';
-import 'package:provider/provider.dart'; // ✅ Tambahkan ini
 
 class DetailsScreen extends StatelessWidget {
   final Bird bird;
@@ -10,18 +9,24 @@ class DetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final favoriteProvider = Provider.of<FavoriteProvider>(context);
-
     return Scaffold(
       appBar: AppBar(title: Text(bird.name)),
-      body: Column(
-        children: [
-          Image.network(bird.imageUrl),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(bird.description),
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(bird.imageUrl, fit: BoxFit.cover, height: 200),
+            SizedBox(height: 16),
+            Text('Scientific Name: ${bird.scientificName}'),
+            SizedBox(height: 8),
+            Text('Description: ${bird.description}'),
+            SizedBox(height: 8),
+            Text('Habitat: ${bird.habitat}'),
+            SizedBox(height: 8),
+            Text('Conservation Status: ${bird.conservationStatus}'),
+          ],
+        ),
       ),
     );
   }
