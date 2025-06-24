@@ -1,10 +1,11 @@
 // screens/home_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../models/endemik.dart';
-import '../utils/database_helper.dart';
+import 'package:provider/provider.dart'; // Import provider
+import 'package:endemicdb_new/model/endemik.dart';
+import 'package:endemicdb_new/services/api_service.dart'; // Menggunakan EndemikService
+import 'package:endemicdb_new/providers/favorite_provider.dart'; // Menggunakan FavoriteProvider
+// utils/database_helper.dart sudah diimport oleh api_service.dart
 import 'details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,101 +16,134 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Endemik> birds = [];
+  // Mengganti nama variabel untuk konsistensi
+  List<Endemik> endemikList = [];
   bool isLoading = true;
-  final dbHelper = DatabaseHelper();
+  final EndemikService _endemikService = EndemikService(); // Inisialisasi EndemikService
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadEndemikData(); // Memuat data saat inisialisasi
   }
 
-  Future<void> _loadData() async {
+  // Metode untuk memuat data endemik
+  Future<void> _loadEndemikData() async {
+    setState(() {
+      isLoading = true; // Set loading true saat memulai pemuatan
+    });
     try {
-      await fetchDataFromApi(); // Ambil dari API
-      final storedBirds = await dbHelper.getAll(); // Ambil dari DB
+      // Mengambil data dari EndemikService, yang sudah menangani API dan DB
+      final List<Endemik> data = await _endemikService.getData();
       setState(() {
-        birds = storedBirds;
+        endemikList = data;
         isLoading = false;
       });
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      print("Error fetching data: $e");
+      print("Error memuat data endemik: $e");
+      // Opsional: Tampilkan pesan error kepada pengguna
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data: $e')),
+      );
     }
-  }
-
-  Future<void> fetchDataFromApi() async {
-    final url = Uri.parse("https://api.ebird.org/v2/data/obs/region/recent/PH");
-    final response = await http.get(
-      url,
-      headers: {"X-eBirdApiToken": "YOUR_API_KEY_HERE"},
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonData = json.decode(response.body);
-      for (var item in jsonData) {
-        final bird = Endemik.fromJson(item);
-        final existing = await dbHelper.getById(bird.id);
-        if (existing == null) {
-          await dbHelper.insert(bird);
-        }
-      }
-    } else {
-      throw Exception('Failed to load data');
-    }
-  }
-
-  void toggleFavorite(Endemik bird) async {
-    String newFav = bird.isFavorit == "true" ? "false" : "true";
-    await dbHelper.setFavorit(bird.id, newFav);
-
-    setState(() {
-      bird.isFavorit = newFav;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Menggunakan Consumer untuk mendapatkan instance FavoriteProvider
+    // dan bereaksi terhadap perubahannya tanpa perlu setState di dalam item list.
     return Scaffold(
-      appBar: AppBar(title: Text("EndemikDB")),
+      appBar: AppBar(
+        title: const Text("EndemikDB"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadEndemikData, // Tambahkan tombol refresh
+          ),
+          // Opsional: Tombol untuk melihat daftar favorit saja
+          // IconButton(
+          //   icon: const Icon(Icons.favorite),
+          //   onPressed: () {
+          //     // Navigasi ke halaman favorit atau filter daftar
+          //   },
+          // ),
+        ],
+      ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : birds.isEmpty
-          ? Center(child: Text("Tidak ada data burung"))
+          ? const Center(child: CircularProgressIndicator())
+          : endemikList.isEmpty
+          ? const Center(child: Text("Tidak ada data endemik ditemukan."))
           : ListView.builder(
-        itemCount: birds.length,
+        itemCount: endemikList.length,
         itemBuilder: (context, index) {
-          Endemik bird = birds[index];
+          Endemik endemik = endemikList[index];
           return Card(
-            margin: EdgeInsets.all(8),
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: ListTile(
-              leading: Image.network(
-                bird.foto,
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-              ),
-              title: Text(bird.nama),
-              subtitle: Text(bird.namaLatin),
-              trailing: IconButton(
-                icon: Icon(
-                  bird.isFavorit == "true"
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  color: Colors.red,
+              contentPadding: const EdgeInsets.all(8),
+              leading: ClipRRect( // Untuk membuat gambar memiliki border radius
+                borderRadius: BorderRadius.circular(8.0),
+                child: Image.network(
+                  endemik.foto,
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.image_not_supported, size: 30, color: Colors.grey),
+                      ),
+                    );
+                  },
                 ),
-                onPressed: () {
-                  toggleFavorite(bird);
+              ),
+              title: Text(
+                endemik.nama,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(endemik.nama_latin),
+              trailing: Consumer<FavoriteProvider>( // Consumer di sini agar hanya tombol favorit yang rebuild
+                builder: (context, favoriteProvider, child) {
+                  final bool isCurrentlyFavorite = favoriteProvider.isFavorite(endemik);
+                  return IconButton(
+                    icon: Icon(
+                      isCurrentlyFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isCurrentlyFavorite ? Colors.red : Colors.grey, // Warna disesuaikan
+                    ),
+                    onPressed: () async {
+                      // Toggle status favorit di FavoriteProvider
+                      if (isCurrentlyFavorite) {
+                        favoriteProvider.removeFavorite(endemik);
+                        // Update status di database juga
+                        await _endemikService.setFavorit(endemik.id!, "false");
+                      } else {
+                        favoriteProvider.addFavorite(endemik);
+                        // Update status di database juga
+                        await _endemikService.setFavorit(endemik.id!, "true");
+                      }
+
+                      setState(() {
+                        endemik.is_favorit = !endemik.is_favorit;
+                      });
+                    },
+                  );
                 },
               ),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DetailsScreen(bird: bird),
+                    builder: (context) => DetailsScreen(endemik: endemik), // Mengganti bird menjadi endemik
                   ),
                 );
               },

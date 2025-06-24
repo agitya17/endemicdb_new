@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:endemicdb_new/models/bird_model.dart';
+import 'package:endemicdb_new/model/endemik.dart';
 
 class FavoriteProvider with ChangeNotifier {
-  List<Bird> _favorites = [];
+  List<Endemik> _favorites = []; // Mengganti Bird menjadi Endemik
 
-  List<Bird> get favorites => _favorites;
+  List<Endemik> get favorites => _favorites; // Mengganti Bird menjadi Endemik
 
-  void addFavorite(Bird bird) {
-    _favorites.add(bird);
+  void addFavorite(Endemik endemik) {
+    if (!_favorites.any((favEndemik) => favEndemik.id == endemik.id)) {
+      _favorites.add(endemik);
+      notifyListeners();
+    }
+  }
+
+  void removeFavorite(Endemik endemik) { // Mengganti Bird menjadi Endemik
+    _favorites.removeWhere((favEndemik) => favEndemik.id == endemik.id);
     notifyListeners();
   }
 
-  void removeFavorite(Bird bird) {
-    _favorites.remove(bird);
-    notifyListeners();
-  }
-
-  bool isFavorite(Bird bird) {
-    return _favorites.contains(bird);
+  bool isFavorite(Endemik endemik) { // Mengganti Bird menjadi Endemik
+    // Mengecek apakah endemik dengan ID yang sama sudah ada di daftar favorit
+    return _favorites.any((favEndemik) => favEndemik.id == endemik.id);
   }
 }

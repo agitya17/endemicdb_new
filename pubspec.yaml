@@ -4,29 +4,31 @@ publish_to: 'none' # Tidak dipublish ke pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.8.0 <4.0.0"
-  flutter: ">=3.22.0"
+  sdk: ">=3.8.0 <4.0.0" # Pastikan versi SDK Anda sesuai, ini cukup modern.
+  flutter: ">=3.22.0" # Pastikan versi Flutter Anda sesuai, ini juga modern.
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
-  http: ^1.4.0
-  sqflite: ^2.2.9
-  provider: ^6.1.1
-  photo_view: ^0.14.0
-  path: ^1.8.3
+  cupertino_icons: ^1.0.8 # Versi terbaru, oke.
+  dio: ^5.4.3 # <<< PERHATIAN: Tambahkan Dio, karena api_service.dart menggunakannya.
+  sqflite: ^2.3.3 # <<< UPDATE: Versi sqflite lebih baru.
+  provider: ^6.1.2 # <<< UPDATE: Versi provider lebih baru.
+  photo_view: ^0.14.0 # Oke, jika Anda akan menggunakannya (misalnya untuk zoom gambar).
+  path: ^1.9.0 # <<< UPDATE: Versi path lebih baru.
+  path_provider: ^2.1.3 # <<< PERHATIAN: Tambahkan path_provider, karena database_helper.dart menggunakannya.
+  # http: ^1.4.0 # <<< HAPUS: Tidak digunakan langsung di home_screen lagi, sudah dienkapsulasi oleh Dio di api_service.dart.
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^5.0.0 # Versi terbaru, oke.
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/data/
+    - assets/data/ # Pastikan folder ini ada jika Anda berencana menyimpan file JSON di sini secara lokal.
   fonts:
     - family: Poppins
       fonts:
